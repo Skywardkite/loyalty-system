@@ -1,3 +1,47 @@
 package main
 
-func main() {}
+import (
+	"errors"
+	"log"
+	"net/http"
+
+	"github.com/Skywardkite/loyalty-system/internal/config"
+	"github.com/Skywardkite/loyalty-system/internal/handler"
+	"github.com/Skywardkite/loyalty-system/internal/repository"
+	"github.com/Skywardkite/loyalty-system/pkg/logger"
+)
+
+func main() {
+	if err := logger.Initialize(); err != nil {
+		log.Fatal("Error to initialize logger:", err)
+	}
+	defer logger.Sync()
+
+	cfg, err := config.ParseFlags()
+	if err != nil {
+		logger.Sugar.Fatalw("Error to parse flags", "error", err)
+	}
+
+	store, err := repository.New(cfg.DatabaseURI)
+	if err != nil {
+		logger.Sugar.Fatalw("Failed to connect to database", "error", err)
+	}
+
+	defer func() {
+		if err := store.Close(); err != nil {
+			logger.Sugar.Errorw("Failed to close database", "error", err)
+		}
+	}()
+
+	h := handler.NewHandler(store, logger.Sugar)
+
+	srv := &http.Server{
+		Addr:    cfg.RunAddr,
+		Handler: h.RegisterRoutes(),
+	}
+
+	logger.Sugar.Infow("Starting server", "addr", cfg.RunAddr)
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		logger.Sugar.Fatalw("Server error", "error", err)
+	}
+}
