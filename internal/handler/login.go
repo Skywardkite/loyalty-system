@@ -13,6 +13,7 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req dto.User
+
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "invalid request format", http.StatusBadRequest)
 		return

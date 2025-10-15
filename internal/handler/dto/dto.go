@@ -9,3 +9,14 @@ type Account struct {
 	Balance    float64 `json:"current"`
 	TotalSpent float64 `json:"withdrawn"`
 }
+
+type ParamsWithdraw struct {
+	Order string  `json:"order"`
+	Sum   float64 `json:"sum"`
+}
+
+type Withdrawal struct {
+	Order       string  `json:"order"`
+	Sum         float64 `json:"sum"`
+	ProcessedAt string  `json:"processed_at"`
+}

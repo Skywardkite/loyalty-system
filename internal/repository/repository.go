@@ -14,6 +14,7 @@ type Storage interface {
 	UserExists(ctx context.Context, login string) (bool, error)
 	GetUserByLogin(ctx context.Context, login string) (id int64, hashedPassword string, err error)
 	GetBalance(ctx context.Context, userID int64) (*dto.Account, error)
+	AddWithdrawal(ctx context.Context, userID, sum int64, orderID string) error
 }
 
 type Repository struct {

@@ -20,11 +20,12 @@ func NewHandler(store repository.Storage, logger *zap.SugaredLogger) *Handler {
 func (h *Handler) RegisterRoutes() http.Handler {
 	r := chi.NewRouter()
 
-	r.Post("/api/user/register", h.RegisterUser)
-	r.Post("/api/user/login", h.LoginUser)
+	r.Post("/api/user/register", h.RegisterUser) // регистрация
+	r.Post("/api/user/login", h.LoginUser)       // авторизация
 
 	r.Group(func(chi.Router) {
-		r.Get("/api/user/balance", h.GetBalance)
+		r.Get("/api/user/balance", h.GetBalance)                // получение баланса
+		r.Post("/api/user/balance/withdraw", h.WithdrawBalance) // списание баллов
 	})
 
 	return r
