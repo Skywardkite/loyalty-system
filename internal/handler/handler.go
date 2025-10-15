@@ -23,10 +23,13 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	r.Post("/api/user/register", h.RegisterUser) // регистрация
 	r.Post("/api/user/login", h.LoginUser)       // авторизация
 
-	r.Group(func(chi.Router) {
-		r.Get("/api/user/balance", h.GetBalance)                // получение баланса
-		r.Post("/api/user/balance/withdraw", h.WithdrawBalance) // списание баллов
-		r.Get("/api/user/withdrawals", h.GetWithdrawals)        // получение всех списаний бонусов
+	r.Group(func(protected chi.Router) {
+		protected.Use(h.AuthMiddleware)
+
+		protected.Get("/api/user/balance", h.GetBalance)                // получение баланса
+		protected.Post("/api/user/balance/withdraw", h.WithdrawBalance) // списание баллов
+		protected.Get("/api/user/withdrawals", h.GetWithdrawals)        // получение всех списаний бонусов
+		protected.Get("/api/user/orders", h.GetOrders)                  // получение загруженных заказов
 	})
 
 	return r

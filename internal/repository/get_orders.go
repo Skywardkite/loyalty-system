@@ -7,18 +7,18 @@ import (
 	slices "github.com/Skywardkite/loyalty-system/internal/utils"
 )
 
-func (r *Repository) GetWithdrawalsByUser(ctx context.Context, userID int64) ([]dto.Withdrawal, error) {
-	var rows []withdrawal
+func (r *Repository) GetOrdersByUser(ctx context.Context, userID int64) ([]dto.OrderInfo, error) {
+	var rows []order
 
 	query := `
-		SELECT order_number, points, processed_at
-		FROM withdrawals
+		SELECT order_number, status, points, uploaded_at
+		FROM orders
 		WHERE user_id = $1
-		ORDER BY processed_at DESC
+		ORDER BY uploaded_at DESC
 	`
 	if err := r.db.SelectContext(ctx, &rows, query, userID); err != nil {
 		return nil, err
 	}
 
-	return slices.Map(rows, withdrawalFromEntity), nil
+	return slices.Map(rows, orderFromEntity), nil
 }
