@@ -26,6 +26,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 	r.Group(func(chi.Router) {
 		r.Get("/api/user/balance", h.GetBalance)                // получение баланса
 		r.Post("/api/user/balance/withdraw", h.WithdrawBalance) // списание баллов
+		r.Get("/api/user/withdrawals", h.GetWithdrawals)        // получение всех списаний бонусов
 	})
 
 	return r

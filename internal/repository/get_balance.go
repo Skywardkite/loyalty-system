@@ -13,5 +13,5 @@ func (r *Repository) GetBalance(ctx context.Context, userID int64) (*dto.Account
 		return nil, err
 	}
 
-	return entityToDTO(a), nil
+	return accountEntityToDTO(a), nil
 }
