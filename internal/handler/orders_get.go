@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"net/http"
 )
@@ -26,10 +27,15 @@ func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Encoding", "gzip")
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
 
-	if err := json.NewEncoder(w).Encode(orders); err != nil {
+	gz := gzip.NewWriter(w)
+	defer gz.Close()
+
+	if err := json.NewEncoder(gz).Encode(orders); err != nil {
 		h.logger.Errorw("failed to encode orders", "error", err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 }
