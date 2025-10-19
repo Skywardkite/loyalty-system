@@ -75,12 +75,14 @@ func (s *Service) processOrders(ctx context.Context) {
 				order.Status = info.Status
 
 				if info.Status == constants.Processed {
-					err = s.store.AddPointsToUser(ctx, order)
-					if err != nil {
-						s.logger.Errorw("failed to add points to user", "order", order.Number, "error", err)
-					}
+					if info.Accrual != nil && *info.Accrual > 0 {
+						err = s.store.AddPointsToUser(ctx, order)
+						if err != nil {
+							s.logger.Errorw("failed to add points to user", "order", order.Number, "error", err)
+						}
 
-					return
+						return
+					}
 				}
 
 				err = s.store.UpdateOrderStatus(ctx, order.Number, constants.GetStatusOrder(order.Status))
