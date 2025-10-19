@@ -15,7 +15,7 @@ func (r *Repository) AddWithdrawal(ctx context.Context, userID, sum int64, order
 		_ = tx.Rollback()
 	}()
 
-	var balance float64
+	var balance float32
 
 	// Блокируем баланс пользователя до конца транзакции
 	err = tx.GetContext(ctx, &balance, `

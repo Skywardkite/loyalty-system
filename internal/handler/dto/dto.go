@@ -6,32 +6,32 @@ type User struct {
 }
 
 type Account struct {
-	Balance    float64 `json:"current"`
-	TotalSpent float64 `json:"withdrawn"`
+	Balance    float32 `json:"current"`
+	TotalSpent float32 `json:"withdrawn"`
 }
 
 type ParamsWithdraw struct {
 	Order string  `json:"order"`
-	Sum   float64 `json:"sum"`
+	Sum   float32 `json:"sum"`
 }
 
 type Withdrawal struct {
 	Order       string  `json:"order"`
-	Sum         float64 `json:"sum"`
+	Sum         float32 `json:"sum"`
 	ProcessedAt string  `json:"processed_at"`
 }
 
 type OrderInfo struct {
 	Number     string  `json:"number"`
 	Status     string  `json:"status"`
-	Accrual    float64 `json:"accrual"`
+	Accrual    float32 `json:"accrual"`
 	UploadedAt string  `json:"uploaded_at"`
 }
 
 type Order struct {
 	Number     string
 	Status     string
-	Accrual    float64
+	Accrual    float32
 	UploadedAt string
 	UserID     int64
 }

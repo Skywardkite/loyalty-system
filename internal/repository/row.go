@@ -27,15 +27,15 @@ type order struct {
 
 func accountEntityToDTO(entity account) *dto.Account {
 	return &dto.Account{
-		Balance:    float64(entity.Balance) / 100,
-		TotalSpent: float64(entity.TotalSpent) / 100,
+		Balance:    float32(entity.Balance) / 100,
+		TotalSpent: float32(entity.TotalSpent) / 100,
 	}
 }
 
 func withdrawalFromEntity(entity withdrawal) dto.Withdrawal {
 	return dto.Withdrawal{
 		Order:       entity.Order,
-		Sum:         float64(entity.Sum) / 100,
+		Sum:         float32(entity.Sum) / 100,
 		ProcessedAt: entity.ProcessedAt.Format(time.RFC3339),
 	}
 }
@@ -44,7 +44,7 @@ func orderInfoFromEntity(entity order) dto.OrderInfo {
 	return dto.OrderInfo{
 		Number:     entity.Number,
 		Status:     entity.Status,
-		Accrual:    float64(entity.Accrual) / 100,
+		Accrual:    float32(entity.Accrual) / 100,
 		UploadedAt: entity.UploadedAt.Format(time.RFC3339),
 	}
 }
@@ -62,7 +62,7 @@ func orderFromEntity(entity order) dto.Order {
 	return dto.Order{
 		Number:     entity.Number,
 		Status:     entity.Status,
-		Accrual:    float64(entity.Accrual) / 100,
+		Accrual:    float32(entity.Accrual) / 100,
 		UploadedAt: entity.UploadedAt.Format(time.RFC3339),
 		UserID:     entity.UserID,
 	}
