@@ -66,7 +66,7 @@ func (h *Handler) addOrder(ctx context.Context, w http.ResponseWriter, userID in
 
 	err = h.store.AddOrder(ctx, userID, orderNumber)
 	if err != nil {
-		h.logger.Errorw("failed to get balance", "error", err)
+		h.logger.Errorw("failed to add order", "error", err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
