@@ -20,7 +20,7 @@ CREATE TABLE orders (
     order_number        TEXT NOT NULL UNIQUE,
     user_id             INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status order_status NOT NULL DEFAULT 'NEW',
-    points              INTEGER NOT NULL,
+    points              INTEGER NOT NULL DEFAULT 0,
     uploaded_at         TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
