@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/pkg/errors"
+
 	"github.com/Skywardkite/loyalty-system/internal/handler/dto"
+	repErr "github.com/Skywardkite/loyalty-system/internal/repository/error"
 )
 
 func (h *Handler) WithdrawBalance(w http.ResponseWriter, r *http.Request) {
@@ -34,24 +37,18 @@ func (h *Handler) WithdrawBalance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account, err := h.store.GetBalance(ctx, userID)
-	if err != nil {
-		h.logger.Errorw("failed to get balance", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	if account.Balance < req.Sum {
-		http.Error(w, "insufficient funds", http.StatusPaymentRequired)
-		return
-	}
-
 	sum := int64(req.Sum * 100)
 
 	if err := h.store.AddWithdrawal(ctx, userID, sum, req.Order); err != nil {
-		h.logger.Errorw("failed to create withdrawal", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
+		switch {
+		case errors.Is(err, repErr.ErrInsufficientFunds):
+			http.Error(w, "insufficient funds", http.StatusPaymentRequired)
+			return
+		default:
+			h.logger.Errorw("failed to create withdrawal", "error", err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)

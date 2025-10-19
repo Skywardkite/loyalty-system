@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
+
+	repErr "github.com/Skywardkite/loyalty-system/internal/repository/error"
 )
 
 func (r *Repository) AddWithdrawal(ctx context.Context, userID, sum int64, orderID string) error {
-	// Транзакция, чтобы одинаковые данные по списаниям были
 	tx, err := r.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
@@ -13,6 +14,23 @@ func (r *Repository) AddWithdrawal(ctx context.Context, userID, sum int64, order
 	defer func() {
 		_ = tx.Rollback()
 	}()
+
+	var balance float64
+
+	// Блокируем баланс пользователя до конца транзакции
+	err = tx.GetContext(ctx, &balance, `
+		SELECT balance 
+		FROM accounts 
+		WHERE user_id = $1 
+		FOR UPDATE
+	`, userID)
+	if err != nil {
+		return err
+	}
+
+	if int64(balance) < sum {
+		return repErr.ErrInsufficientFunds
+	}
 
 	_, err = r.db.ExecContext(ctx, `
 		UPDATE accounts
@@ -32,6 +50,7 @@ func (r *Repository) AddWithdrawal(ctx context.Context, userID, sum int64, order
 		return err
 	}
 
+	// Фиксируем транзакцию
 	if err = tx.Commit(); err != nil {
 		return err
 	}
