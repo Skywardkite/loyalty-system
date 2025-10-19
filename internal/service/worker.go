@@ -41,7 +41,7 @@ func (s *Service) processOrders(ctx context.Context) {
 
 		go func() {
 			defer wg.Done()
-			
+
 			select {
 			case pause := <-pauseChan:
 				s.logger.Warnw("pausing worker due to 429", "wait", pause.Seconds())

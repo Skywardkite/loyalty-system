@@ -13,7 +13,7 @@ type Config struct {
 
 func ParseFlags() (Config, error) {
 	cfg := Config{
-		RunAddr: ":8080",
+		RunAddr:              ":8080",
 		AccrualSystemAddress: "http://localhost:8081",
 	}
 

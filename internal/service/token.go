@@ -36,7 +36,7 @@ func ParseAuthToken(tokenString string) (int64, error) {
 		return 0, jwt.ErrTokenInvalidClaims
 	}
 
-	userIDFloat, ok := claims["user_id"].(float32)
+	userIDFloat, ok := claims["user_id"].(float64)
 	if !ok {
 		return 0, jwt.ErrTokenInvalidClaims
 	}
