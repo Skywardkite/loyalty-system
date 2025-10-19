@@ -14,6 +14,7 @@ type Config struct {
 func ParseFlags() (Config, error) {
 	cfg := Config{
 		RunAddr: ":8080",
+		AccrualSystemAddress: "http://localhost:8081",
 	}
 
 	if envRunAddr, ok := os.LookupEnv("RUN_ADDRESS"); ok {

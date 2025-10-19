@@ -10,7 +10,7 @@ import (
 )
 
 func (s *Service) StartAccrualWorker(ctx context.Context) {
-	ticker := time.NewTicker(30 * time.Second)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	s.logger.Infow("accrual worker started")
