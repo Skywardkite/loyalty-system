@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/Skywardkite/loyalty-system/internal/constants"
@@ -32,42 +33,65 @@ func (s *Service) processOrders(ctx context.Context) {
 		return
 	}
 
-	for _, order := range orders {
-		info, code, retryAfter, err := s.accrualClient.GetOrderAccrual(ctx, order.Number)
-		if err != nil {
-			s.logger.Errorw("failed to fetch order from accrual", "order", order.Number, "error", err)
-			continue
-		}
+	var wg sync.WaitGroup
+	pauseChan := make(chan time.Duration, 1) // канал для паузы при 429
 
-		switch code {
-		case http.StatusTooManyRequests:
-			s.logger.Warnw("accrual rate limit hit", "order", order.Number)
-			time.Sleep(time.Duration(retryAfter) * time.Second)
-			continue
-		case http.StatusNoContent:
-			continue
-		case http.StatusOK:
-			if info.Status == order.Status {
-				continue
+	for _, order := range orders {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+
+			select {
+			case pause := <-pauseChan:
+				s.logger.Warnw("pausing worker due to 429", "wait", pause.Seconds())
+				time.Sleep(pause)
+			default:
+				// можем идти дальше, пока StatusTooManyRequests не было
 			}
 
-			order.Status = info.Status
+			info, code, retryAfter, err := s.accrualClient.GetOrderAccrual(ctx, order.Number)
+			if err != nil {
+				s.logger.Errorw("failed to fetch order from accrual", "order", order.Number, "error", err)
+				return
+			}
 
-			if info.Status == constants.Processed {
-				err = s.store.AddPointsToUser(ctx, order)
-				if err != nil {
-					s.logger.Errorw("failed to add points to user", "order", order.Number, "error", err)
+			switch code {
+			case http.StatusTooManyRequests:
+				s.logger.Warnw("accrual rate limit hit", "order", order.Number)
+				select {
+				case pauseChan <- time.Duration(retryAfter) * time.Second:
+				default:
+					// пропускаем, если канал уже содержит паузу
+				}
+				return
+			case http.StatusNoContent:
+				return
+			case http.StatusOK:
+				if info.Status == order.Status {
+					return
 				}
 
-				continue
-			}
+				order.Status = info.Status
 
-			err = s.store.UpdateOrderStatus(ctx, order.Number, constants.GetStatusOrder(order.Status))
-			if err != nil {
-				s.logger.Errorw("failed to update order status", "order", order.Number, "error", err)
+				if info.Status == constants.Processed {
+					err = s.store.AddPointsToUser(ctx, order)
+					if err != nil {
+						s.logger.Errorw("failed to add points to user", "order", order.Number, "error", err)
+					}
+
+					return
+				}
+
+				err = s.store.UpdateOrderStatus(ctx, order.Number, constants.GetStatusOrder(order.Status))
+				if err != nil {
+					s.logger.Errorw("failed to update order status", "order", order.Number, "error", err)
+				}
+			default:
+				s.logger.Warnw("unexpected accrual response", "order", order.Number, "code", code)
 			}
-		default:
-			s.logger.Warnw("unexpected accrual response", "order", order.Number, "code", code)
-		}
+		}()
 	}
+
+	wg.Wait()
 }
