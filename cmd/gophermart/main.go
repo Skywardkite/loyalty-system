@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/Skywardkite/loyalty-system/internal/repository"
 	"github.com/Skywardkite/loyalty-system/internal/service"
 	"github.com/Skywardkite/loyalty-system/pkg/logger"
+	"github.com/pkg/errors"
 )
 
 func main() {

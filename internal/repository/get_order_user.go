@@ -3,7 +3,8 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"errors"
+
+	"github.com/pkg/errors"
 
 	repErr "github.com/Skywardkite/loyalty-system/internal/repository/error"
 )

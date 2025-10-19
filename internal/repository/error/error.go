@@ -1,6 +1,6 @@
 package repository
 
-import "errors"
+import "github.com/pkg/errors"
 
 var (
 	ErrOrderNotExsit = errors.New("Заказа в системе нет")

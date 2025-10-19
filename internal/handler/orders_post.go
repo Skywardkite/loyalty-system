@@ -2,10 +2,11 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/pkg/errors"
 
 	repErr "github.com/Skywardkite/loyalty-system/internal/repository/error"
 	"github.com/Skywardkite/loyalty-system/internal/service"
