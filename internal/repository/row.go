@@ -20,8 +20,9 @@ type withdrawal struct {
 type order struct {
 	Number     string    `db:"order_number"`
 	Status     string    `db:"status"`
-	Accrual    float64   `db:"points"`
+	Accrual    int64     `db:"points"`
 	UploadedAt time.Time `db:"uploaded_at"`
+	UserID     int64     `db:"user_id"`
 }
 
 func accountEntityToDTO(entity account) *dto.Account {
@@ -39,11 +40,30 @@ func withdrawalFromEntity(entity withdrawal) dto.Withdrawal {
 	}
 }
 
-func orderFromEntity(entity order) dto.OrderInfo {
+func orderInfoFromEntity(entity order) dto.OrderInfo {
 	return dto.OrderInfo{
 		Number:     entity.Number,
 		Status:     entity.Status,
 		Accrual:    float64(entity.Accrual) / 100,
 		UploadedAt: entity.UploadedAt.Format(time.RFC3339),
+	}
+}
+
+func orderToEntity(o dto.Order) order {
+	return order{
+		Number:  o.Number,
+		Status:  o.Status,
+		Accrual: int64(o.Accrual * 100),
+		UserID:  o.UserID,
+	}
+}
+
+func orderFromEntity(entity order) dto.Order {
+	return dto.Order{
+		Number:     entity.Number,
+		Status:     entity.Status,
+		Accrual:    float64(entity.Accrual) / 100,
+		UploadedAt: entity.UploadedAt.Format(time.RFC3339),
+		UserID:     entity.UserID,
 	}
 }

@@ -27,3 +27,11 @@ type OrderInfo struct {
 	Accrual    float64 `json:"accrual"`
 	UploadedAt string  `json:"uploaded_at"`
 }
+
+type Order struct {
+	Number     string
+	Status     string
+	Accrual    float64
+	UploadedAt string
+	UserID     int64
+}

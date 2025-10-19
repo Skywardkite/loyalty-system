@@ -20,5 +20,5 @@ func (r *Repository) GetOrdersByUser(ctx context.Context, userID int64) ([]dto.O
 		return nil, err
 	}
 
-	return slices.Map(rows, orderFromEntity), nil
+	return slices.Map(rows, orderInfoFromEntity), nil
 }

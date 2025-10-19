@@ -5,18 +5,18 @@ import (
 	"strconv"
 )
 
-func validateOrder(orderNumber string) error {
+func ValidateOrder(orderNumber string) bool {
 	// Проверяем, что только цифры
 	if !regexp.MustCompile(`^\d+$`).MatchString(orderNumber) {
-		return ErrOrderNotExsit
+		return false
 	}
 
 	// Проверка алгоритмом Луна
 	if !isValidLuhn(orderNumber) {
-		return ErrOrderNotExsit
+		return false
 	}
 
-	return nil
+	return true
 }
 
 func isValidLuhn(order string) bool {

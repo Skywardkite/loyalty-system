@@ -6,8 +6,9 @@ import (
 )
 
 type Config struct {
-	RunAddr     string
-	DatabaseURI string
+	RunAddr              string
+	DatabaseURI          string
+	AccrualSystemAddress string
 }
 
 func ParseFlags() (Config, error) {
@@ -19,12 +20,17 @@ func ParseFlags() (Config, error) {
 		cfg.RunAddr = envRunAddr
 	}
 
-	if envDatabaseDSN, ok := os.LookupEnv("DATABASE_URI"); ok {
-		cfg.DatabaseURI = envDatabaseDSN
+	if envDatabaseURI, ok := os.LookupEnv("DATABASE_URI"); ok {
+		cfg.DatabaseURI = envDatabaseURI
+	}
+
+	if accrualAddress, ok := os.LookupEnv("ACCRUAL_SYSTEM_ADDRESS"); ok {
+		cfg.AccrualSystemAddress = accrualAddress
 	}
 
 	flag.StringVar(&cfg.RunAddr, "a", cfg.RunAddr, "address and port to run server")
 	flag.StringVar(&cfg.DatabaseURI, "d", cfg.DatabaseURI, "database connection")
+	flag.StringVar(&cfg.AccrualSystemAddress, "r", cfg.AccrualSystemAddress, "address for connecting to accrual")
 
 	flag.Parse()
 

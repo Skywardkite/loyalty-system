@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/Skywardkite/loyalty-system/internal/accrual"
 	"github.com/Skywardkite/loyalty-system/internal/config"
 	"github.com/Skywardkite/loyalty-system/internal/handler"
 	"github.com/Skywardkite/loyalty-system/internal/repository"
@@ -17,6 +20,9 @@ func main() {
 		log.Fatal("Error to initialize logger:", err)
 	}
 	defer logger.Sync()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	cfg, err := config.ParseFlags()
 	if err != nil {
@@ -34,8 +40,12 @@ func main() {
 		}
 	}()
 
-	s := service.New(&cfg, logger.Sugar, store)
+	accrualClient := accrual.NewClient(cfg.AccrualSystemAddress, 5*time.Second)
+	s := service.New(logger.Sugar, store, accrualClient)
 	h := handler.NewHandler(store, logger.Sugar, s)
+
+	// Запускаем воркер для постоянной обработки заказов через accrual
+	go s.StartAccrualWorker(ctx)
 
 	srv := &http.Server{
 		Addr:    cfg.RunAddr,

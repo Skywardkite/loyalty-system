@@ -19,19 +19,22 @@ type Storage interface {
 	GetOrdersByUser(ctx context.Context, userID int64) ([]dto.OrderInfo, error)
 	AddOrder(ctx context.Context, userID int64, order string) error
 	GetOrderUserByNumber(ctx context.Context, order string) (userID int64, err error)
+	GetUnprocessedOrders(ctx context.Context) ([]dto.Order, error)
+	UpdateOrderStatus(ctx context.Context, orderNumber, status string) error
+	AddPointsToUser(ctx context.Context, order dto.Order) error
 }
 
 type Repository struct {
 	db *sqlx.DB
 }
 
-func New(dsn string) (*Repository, error) {
-	db, err := sqlx.Connect("pgx", dsn)
+func New(uri string) (*Repository, error) {
+	db, err := sqlx.Connect("pgx", uri)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	err = applyMigrations(dsn)
+	err = applyMigrations(uri)
 	if err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
