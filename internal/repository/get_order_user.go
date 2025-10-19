@@ -15,6 +15,6 @@ func (r *Repository) GetOrderUserByNumber(ctx context.Context, order string) (us
 	if errors.Is(err, sql.ErrNoRows) {
 		return 0, repErr.ErrOrderNotExsit
 	}
-	
-	return 
+
+	return
 }

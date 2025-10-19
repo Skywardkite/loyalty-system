@@ -1,8 +1,25 @@
 package service
 
-import "strconv"
+import (
+	"regexp"
+	"strconv"
+)
 
-func IsValidLuhn(order string) bool {
+func validateOrder(orderNumber string) error {
+	// Проверяем, что только цифры
+	if !regexp.MustCompile(`^\d+$`).MatchString(orderNumber) {
+		return ErrOrderNotExsit
+	}
+
+	// Проверка алгоритмом Луна
+	if !isValidLuhn(orderNumber) {
+		return ErrOrderNotExsit
+	}
+
+	return nil
+}
+
+func isValidLuhn(order string) bool {
 	sum := 0
 	alternate := false // Флаг для чередования
 
@@ -24,4 +41,4 @@ func IsValidLuhn(order string) bool {
 	}
 
 	return sum%10 == 0
- }
+}

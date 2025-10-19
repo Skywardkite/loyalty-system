@@ -8,6 +8,7 @@ import (
 	"github.com/Skywardkite/loyalty-system/internal/config"
 	"github.com/Skywardkite/loyalty-system/internal/handler"
 	"github.com/Skywardkite/loyalty-system/internal/repository"
+	"github.com/Skywardkite/loyalty-system/internal/service"
 	"github.com/Skywardkite/loyalty-system/pkg/logger"
 )
 
@@ -33,7 +34,8 @@ func main() {
 		}
 	}()
 
-	h := handler.NewHandler(store, logger.Sugar)
+	s := service.New(&cfg, logger.Sugar, store)
+	h := handler.NewHandler(store, logger.Sugar, s)
 
 	srv := &http.Server{
 		Addr:    cfg.RunAddr,
