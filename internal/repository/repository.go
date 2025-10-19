@@ -17,6 +17,8 @@ type Storage interface {
 	AddWithdrawal(ctx context.Context, userID, sum int64, orderID string) error
 	GetWithdrawalsByUser(ctx context.Context, userID int64) ([]dto.Withdrawal, error)
 	GetOrdersByUser(ctx context.Context, userID int64) ([]dto.OrderInfo, error)
+	AddOrder(ctx context.Context, userID int64, order string) (error)
+	GetOrderUserByNumber(ctx context.Context, order string) (userID int64, err error)
 }
 
 type Repository struct {

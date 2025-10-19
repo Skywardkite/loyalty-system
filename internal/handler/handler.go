@@ -30,6 +30,7 @@ func (h *Handler) RegisterRoutes() http.Handler {
 		protected.Post("/api/user/balance/withdraw", h.WithdrawBalance) // списание баллов
 		protected.Get("/api/user/withdrawals", h.GetWithdrawals)        // получение всех списаний бонусов
 		protected.Get("/api/user/orders", h.GetOrders)                  // получение загруженных заказов
+		protected.Post("/api/user/orders", h.PostOrder) 				// загрузка заказа
 	})
 
 	return r
