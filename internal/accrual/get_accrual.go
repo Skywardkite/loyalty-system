@@ -12,7 +12,7 @@ import (
 type OrderInfo struct {
 	Order   string   `json:"order"`
 	Status  string   `json:"status"`
-	Accrual *float32 `json:"accrual"`
+	Accrual *float32 `json:"accrual,omitempty"`
 }
 
 func (c *Client) GetOrderAccrual(ctx context.Context, orderNum string) (*OrderInfo, int, int, error) {

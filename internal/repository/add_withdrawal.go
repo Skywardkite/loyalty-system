@@ -32,7 +32,7 @@ func (r *Repository) AddWithdrawal(ctx context.Context, userID, sum int64, order
 		return repErr.ErrInsufficientFunds
 	}
 
-	_, err = r.db.ExecContext(ctx, `
+	_, err = tx.ExecContext(ctx, `
 		UPDATE accounts
 		SET balance = balance - $1, total_spent = total_spent + $2
 		WHERE user_id = $3`,
@@ -41,7 +41,7 @@ func (r *Repository) AddWithdrawal(ctx context.Context, userID, sum int64, order
 		return err
 	}
 
-	_, err = r.db.ExecContext(ctx, `
+	_, err = tx.ExecContext(ctx, `
 		INSERT INTO withdrawals 
 			(user_id, order_number, points) 
 		VALUES ($1, $2, $3)`,
