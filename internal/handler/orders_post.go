@@ -1,15 +1,11 @@
 package handler
 
 import (
-	"context"
 	"io"
 	"net/http"
-	"strings"
 
-	"github.com/pkg/errors"
-
-	repErr "github.com/Skywardkite/loyalty-system/internal/repository/error"
 	"github.com/Skywardkite/loyalty-system/internal/service"
+	"github.com/pkg/errors"
 )
 
 func (h *Handler) PostOrder(w http.ResponseWriter, r *http.Request) {
@@ -28,51 +24,26 @@ func (h *Handler) PostOrder(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	orderNum := string(body)
-
-	number := strings.TrimSpace(orderNum)
-	if number == "" {
-		http.Error(w, "empty order number", http.StatusBadRequest)
-		return
-	}
-
-	isDone := h.addOrder(ctx, w, userID, orderNum)
-	if isDone {
-		return
-	}
-
-	w.WriteHeader(http.StatusAccepted)
-}
-
-func (h *Handler) addOrder(ctx context.Context, w http.ResponseWriter, userID int64, orderNumber string) bool {
-	if !service.ValidateOrder(orderNumber) {
-		http.Error(w, "invalid order number", http.StatusUnprocessableEntity)
-		return true
-	}
-
-	orderUserID, err := h.store.GetOrderUserByNumber(ctx, orderNumber)
-	if err != nil && !errors.Is(err, repErr.ErrOrderNotExsit) {
-		h.logger.Errorw("failed to check order", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return true
-	}
-
-	if orderUserID != 0 {
-		if orderUserID == userID {
+	err = h.service.AddOrder(ctx, string(body), userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrBadRequest):
+			http.Error(w, "empty order number", http.StatusBadRequest)
+			return
+		case errors.Is(err, service.ErrInvalidOrderNumber):
+			http.Error(w, "invalid order number", http.StatusUnprocessableEntity)
+			return
+		case errors.Is(err, service.ErrOrderUploadedThisUser):
 			w.WriteHeader(http.StatusOK)
-			return true
-		} else {
+			return
+		case errors.Is(err, service.ErrOrderUploadedAnotherUser):
 			http.Error(w, "order already uploaded by another user", http.StatusConflict)
-			return true
+			return
+		default:
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
 		}
 	}
 
-	err = h.store.AddOrder(ctx, userID, orderNumber)
-	if err != nil {
-		h.logger.Errorw("failed to add order", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return true
-	}
-
-	return false
+	w.WriteHeader(http.StatusAccepted)
 }

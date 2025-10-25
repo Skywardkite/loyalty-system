@@ -5,7 +5,7 @@ import (
 	"strconv"
 )
 
-func ValidateOrder(orderNumber string) bool {
+func validateOrder(orderNumber string) bool {
 	// Проверяем, что только цифры
 	if !regexp.MustCompile(`^\d+$`).MatchString(orderNumber) {
 		return false
