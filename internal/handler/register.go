@@ -5,7 +5,8 @@ import (
 	"net/http"
 
 	"github.com/Skywardkite/loyalty-system/internal/handler/dto"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/Skywardkite/loyalty-system/internal/service"
+	"github.com/pkg/errors"
 )
 
 func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -18,36 +19,19 @@ func (h *Handler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if req.Login == "" || req.Password == "" {
-		http.Error(w, "login and password required", http.StatusBadRequest)
-		return
-	}
-
-	exists, err := h.store.UserExists(ctx, req.Login)
+	userID, err := h.service.Registration(ctx, &req)
 	if err != nil {
-		h.logger.Errorw("failed to check user existence", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-	if exists {
-		http.Error(w, "login already exists", http.StatusConflict)
-		return
-	}
-
-	// Хэшируем пароль
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		h.logger.Errorw("failed to hash password", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	// Создаём пользователя
-	userID, err := h.store.CreateUser(ctx, req.Login, string(hashedPassword))
-	if err != nil {
-		h.logger.Errorw("failed to create user", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
+		switch {
+		case errors.Is(err, service.ErrBadRequest):
+			http.Error(w, "login and password required", http.StatusBadRequest)
+			return
+		case errors.Is(err, service.ErrUserAlredyExists):
+			http.Error(w, "login already exists", http.StatusConflict)
+			return
+		default:
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	h.getToken(userID, w)

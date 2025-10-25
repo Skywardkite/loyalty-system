@@ -1,0 +1,14 @@
+all: false
+dir: "{{.InterfaceDir}}/mocks"
+filename: "{{.InterfaceName}}_mock.go"
+force-file-write: false
+formatter: goimports
+log-level: info
+structname: '{{.Mock}}{{.InterfaceName}}'
+pkgname: "mocks"
+recursive: false
+template: testify
+packages:
+  github.com/Skywardkite/loyalty-system/internal/repository:
+    config:
+      all: true

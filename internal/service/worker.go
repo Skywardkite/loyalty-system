@@ -6,7 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Skywardkite/loyalty-system/internal/accrual"
 	"github.com/Skywardkite/loyalty-system/internal/constants"
+	"github.com/Skywardkite/loyalty-system/internal/handler/dto"
 )
 
 func (s *Service) StartAccrualWorker(ctx context.Context) {
@@ -68,27 +70,7 @@ func (s *Service) processOrders(ctx context.Context) {
 			case http.StatusNoContent:
 				return
 			case http.StatusOK:
-				if info.Status == order.Status {
-					return
-				}
-
-				order.Status = info.Status
-
-				if info.Status == constants.Processed {
-					if info.Accrual != nil && *info.Accrual > 0 {
-						err = s.store.AddPointsToUser(ctx, order)
-						if err != nil {
-							s.logger.Errorw("failed to add points to user", "order", order.Number, "error", err)
-						}
-
-						return
-					}
-				}
-
-				err = s.store.UpdateOrderStatus(ctx, order.Number, constants.GetStatusOrder(order.Status))
-				if err != nil {
-					s.logger.Errorw("failed to update order status", "order", order.Number, "error", err)
-				}
+				s.updateOrder(ctx, info, &order)
 			default:
 				s.logger.Warnw("unexpected accrual response", "order", order.Number, "code", code)
 			}
@@ -96,4 +78,28 @@ func (s *Service) processOrders(ctx context.Context) {
 	}
 
 	wg.Wait()
+}
+
+func (s *Service) updateOrder(ctx context.Context, info *accrual.OrderInfo, order *dto.Order) {
+	if info.Status == order.Status {
+		return
+	}
+
+	order.Status = info.Status
+
+	if info.Status == constants.Processed {
+		if info.Accrual != nil && *info.Accrual > 0 {
+			err := s.store.AddPointsToUser(ctx, *order)
+			if err != nil {
+				s.logger.Errorw("failed to add points to user", "order", order.Number, "error", err)
+			}
+
+			return
+		}
+	}
+
+	err := s.store.UpdateOrderStatus(ctx, order.Number, constants.GetStatusOrder(order.Status))
+	if err != nil {
+		s.logger.Errorw("failed to update order status", "order", order.Number, "error", err)
+	}
 }
