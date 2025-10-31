@@ -6,7 +6,7 @@ import (
 
 	"github.com/Skywardkite/loyalty-system/internal/handler/dto"
 	"github.com/Skywardkite/loyalty-system/internal/service"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/pkg/errors"
 )
 
 func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
@@ -20,22 +20,19 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if req.Login == "" || req.Password == "" {
-		http.Error(w, "login and password required", http.StatusBadRequest)
-		return
-	}
-
-	userID, hashedPassword, err := h.store.GetUserByLogin(ctx, req.Login)
+	userID, err := h.service.Login(ctx, &req)
 	if err != nil {
-		h.logger.Errorw("failed to get user by login", "error", err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
-	// Сравниваем пароль
-	if err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(req.Password)); err != nil {
-		http.Error(w, "invalid login or password", http.StatusUnauthorized)
-		return
+		switch {
+		case errors.Is(err, service.ErrBadRequest):
+			http.Error(w, "login and password required", http.StatusBadRequest)
+			return
+		case errors.Is(err, service.ErrUnauthorized):
+			http.Error(w, "invalid login or password", http.StatusUnauthorized)
+			return
+		default:
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	h.getToken(userID, w)

@@ -8,6 +8,7 @@ import (
 
 	"github.com/Skywardkite/loyalty-system/internal/handler/dto"
 	repErr "github.com/Skywardkite/loyalty-system/internal/repository/error"
+	"github.com/Skywardkite/loyalty-system/internal/service"
 )
 
 func (h *Handler) WithdrawBalance(w http.ResponseWriter, r *http.Request) {
@@ -27,25 +28,16 @@ func (h *Handler) WithdrawBalance(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.Body.Close()
 
-	if req.Order == "" {
-		http.Error(w, "invalid order", http.StatusUnprocessableEntity)
-		return
-	}
-
-	if req.Sum <= 0 {
-		http.Error(w, "invalid sum", http.StatusUnprocessableEntity)
-		return
-	}
-
-	sum := int64(req.Sum * 100)
-
-	if err := h.store.AddWithdrawal(ctx, userID, sum, req.Order); err != nil {
+	err := h.service.WriteOffPoints(ctx, &req, userID)
+	if err != nil {
 		switch {
+		case errors.Is(err, service.ErrUnprocessableEntity):
+			http.Error(w, "invalid data in request", http.StatusUnprocessableEntity)
+			return
 		case errors.Is(err, repErr.ErrInsufficientFunds):
 			http.Error(w, "insufficient funds", http.StatusPaymentRequired)
 			return
 		default:
-			h.logger.Errorw("failed to create withdrawal", "error", err)
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
 		}
